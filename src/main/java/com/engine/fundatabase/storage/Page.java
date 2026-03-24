@@ -1,8 +1,10 @@
-package storage;
+package com.engine.fundatabase.storage;
 
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
+
+import com.engine.fundatabase.utils.Constants;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -42,6 +44,10 @@ public class Page {
 		return res;
 
 	}
+	
+	public Vector<Row> select(Hashtable<String, Object> colNameValue, String operator) {
+		return linearSearchWithOperator(this, operator, colNameValue);
+	}
 
 	private void newMinMax() {
 		if (rows.size() > 0) {
@@ -77,6 +83,36 @@ public class Page {
 		}
 		return results;
 	}
+	
+	private static Vector<Row> linearSearchWithOperator(Page page, String operator,
+			Hashtable<String, Object> colNameValue) {
+		Vector<Row> res = new Vector<>();
+		String key = colNameValue.keys().nextElement();
+		for (int i = 0; i < page.getSize(); i++) {
+			Row tuple = page.getRows().get(i);
+			Object tupleVal = getValueOfColInTuple(tuple, key);
+			if (operatorBasedSelection(tupleVal, colNameValue.get(key), operator))
+				res.add(tuple);
+		}
+		return res;
+	}
+	
+	
+	private static boolean operatorBasedSelection(Object firstOperand, Object secondOperand, String operator) {
+		if (operator.equals(Constants.EQUAL))
+			return compare(firstOperand, secondOperand) == 0;
+		if (operator.equals(Constants.GREATER_THAN))
+			return compare(firstOperand, secondOperand) > 0;
+		if (operator.equals(Constants.GREATER_THAN_OR_EQUAL))
+			return compare(firstOperand, secondOperand) >= 0;
+		if (operator.equals(Constants.LESS_THAN))
+			return compare(firstOperand, secondOperand) < 0;
+		if (operator.equals(Constants.LESS_THAN_OR_EQUAL))
+			return compare(firstOperand, secondOperand) <= 0;
+		else
+			return compare(firstOperand, secondOperand) != 0;
+	}
+
 
 	private static int binarySearch(Page page, Object primaryKey) {
 

@@ -1,4 +1,4 @@
-package storage;
+package com.engine.fundatabase.storage;
 
 public interface IRow {
 	public void addColumn(Columns c);

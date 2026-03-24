@@ -1,4 +1,4 @@
-package storage;
+package com.engine.fundatabase.storage;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
