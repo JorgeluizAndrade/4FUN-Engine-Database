@@ -37,7 +37,7 @@ public class Page {
 		return rows.size();
 	}
 
-	protected Row removeLastTuple(ArrayList<Row> rows) {
+	protected Row removeLastRow(ArrayList<Row> rows) {
 		Row res = rows.remove(rows.size() - 1);
 		newMinMax();
 
@@ -67,19 +67,19 @@ public class Page {
 	public static ArrayList<Row> linearSearch(Page page, Hashtable<String, Object> colNameValue) {
 
 		ArrayList<Row> results = new ArrayList<Row>();
-		for (Row currTuple : page.getRows()) {
+		for (Row currRow : page.getRows()) {
 			boolean isValid = true;
 			for (Map.Entry<String, Object> curr : colNameValue.entrySet()) {
 				String colName = curr.getKey();
 				Object value = curr.getValue();
-				Object currValue = getValueOfColInTuple(currTuple, colName);
+				Object currValue = getValueOfColInRow(currRow, colName);
 				if (currValue == null || compare(currValue, value) != 0) {
 					isValid = false;
 					break;
 				}
 			}
 			if (isValid)
-				results.add(currTuple);
+				results.add(currRow);
 		}
 		return results;
 	}
@@ -89,10 +89,10 @@ public class Page {
 		ArrayList<Row> res = new ArrayList<>();
 		String key = colNameValue.keys().nextElement();
 		for (int i = 0; i < page.getSize(); i++) {
-			Row tuple = page.getRows().get(i);
-			Object tupleVal = getValueOfColInTuple(tuple, key);
-			if (operatorBasedSelection(tupleVal, colNameValue.get(key), operator))
-				res.add(tuple);
+			Row Row = page.getRows().get(i);
+			Object RowVal = getValueOfColInRow(Row, key);
+			if (operatorBasedSelection(RowVal, colNameValue.get(key), operator))
+				res.add(Row);
 		}
 		return res;
 	}
@@ -120,9 +120,9 @@ public class Page {
 		int high = page.getSize() - 1;
 		while (low <= high) {
 			int mid = low + (high - low) / 2;
-			Row currTuple = page.getRows().get(mid);
-			Object pkValueOfCurrTuple = currTuple.getPrimaryKey();
-			int comp = compare(primaryKey, pkValueOfCurrTuple);
+			Row currRow = page.getRows().get(mid);
+			Object pkValueOfCurrRow = currRow.getPrimaryKey();
+			int comp = compare(primaryKey, pkValueOfCurrRow);
 			if (comp == 0)
 				return mid;
 			else if (comp > 0)
@@ -137,12 +137,12 @@ public class Page {
 		return ((Comparable) first).compareTo((Comparable) second);
 	}
 
-	private static Object getValueOfColInTuple(Row currTuple, String colName) {
+	private static Object getValueOfColInRow(Row currRow, String colName) {
 
 		Object ret = null;
-		for (Columns currCellInTuple : currTuple.getColumns())
-			if (currCellInTuple.getKey().equals(colName)) {
-				ret = currCellInTuple.getValue();
+		for (Columns currColunmInRow : currRow.getColumns())
+			if (currColunmInRow.getKey().equals(colName)) {
+				ret = currColunmInRow.getValue();
 				break;
 			}
 		return ret;
