@@ -1,7 +1,7 @@
 package com.engine.fundatabase.storage;
 
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import com.engine.fundatabase.utils.serializer.Serializer;
 
@@ -18,7 +18,7 @@ public class Table {
 	private String name, pkColumn;
 	private Row row;
 	private int size;
-	private Vector<String> pagesId;
+	private ArrayList<String> pagesId;
 	private Hashtable<String, String> colNameType, colNameMin, colNameMax;
 	private String primaryKeyType;
 	
@@ -27,8 +27,8 @@ public class Table {
 		return pagesId.size() == 0;
 	}
 	
-	public Vector<Row> select(Hashtable<String, Object> colNameValue, String operator){
-		Vector<Row> result = new Vector<>();
+	public ArrayList<Row> select(Hashtable<String, Object> colNameValue, String operator){
+		ArrayList<Row> result = new ArrayList<>();
 		for (int i = 0; i < pagesId.size(); i++) {
 			Page page = getPageAtPosition(i);
 			result.addAll(page.select(colNameValue, operator));

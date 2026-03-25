@@ -2,7 +2,7 @@ package com.engine.fundatabase.storage;
 
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import com.engine.fundatabase.utils.Constants;
 
@@ -23,12 +23,12 @@ import lombok.Setter;
 public class Page {
 	private String name;
 	private int maxRows;
-	private Vector<Row> rows;
+	private ArrayList<Row> rows;
 	private Object minPK, maxPK;
 	private String tableName;
 
 	public Page(String tableName) throws RuntimeException {
-		this.rows = new Vector<>();
+		this.rows = new ArrayList<>();
 		this.tableName = tableName;
 		maxRows = 1000;
 	}
@@ -37,7 +37,7 @@ public class Page {
 		return rows.size();
 	}
 
-	protected Row removeLastTuple(Vector<Row> rows) {
+	protected Row removeLastTuple(ArrayList<Row> rows) {
 		Row res = rows.remove(rows.size() - 1);
 		newMinMax();
 
@@ -45,7 +45,7 @@ public class Page {
 
 	}
 	
-	public Vector<Row> select(Hashtable<String, Object> colNameValue, String operator) {
+	public ArrayList<Row> select(Hashtable<String, Object> colNameValue, String operator) {
 		return linearSearchWithOperator(this, operator, colNameValue);
 	}
 
@@ -60,13 +60,13 @@ public class Page {
 		return binarySearch(this, primaryKey);
 	}
 
-	protected Vector<Row> linearSearch(Hashtable<String, Object> colNameValue) {
+	protected ArrayList<Row> linearSearch(Hashtable<String, Object> colNameValue) {
 		return linearSearch(this, colNameValue);
 	}
 
-	public static Vector<Row> linearSearch(Page page, Hashtable<String, Object> colNameValue) {
+	public static ArrayList<Row> linearSearch(Page page, Hashtable<String, Object> colNameValue) {
 
-		Vector<Row> results = new Vector<Row>();
+		ArrayList<Row> results = new ArrayList<Row>();
 		for (Row currTuple : page.getRows()) {
 			boolean isValid = true;
 			for (Map.Entry<String, Object> curr : colNameValue.entrySet()) {
@@ -84,9 +84,9 @@ public class Page {
 		return results;
 	}
 	
-	private static Vector<Row> linearSearchWithOperator(Page page, String operator,
+	private static ArrayList<Row> linearSearchWithOperator(Page page, String operator,
 			Hashtable<String, Object> colNameValue) {
-		Vector<Row> res = new Vector<>();
+		ArrayList<Row> res = new ArrayList<>();
 		String key = colNameValue.keys().nextElement();
 		for (int i = 0; i < page.getSize(); i++) {
 			Row tuple = page.getRows().get(i);

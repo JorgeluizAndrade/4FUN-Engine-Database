@@ -1,5 +1,6 @@
 package com.engine.fundatabase.storage;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 import lombok.Getter;
@@ -7,13 +8,13 @@ import lombok.Getter;
 
 @Getter
 public class Row implements IRow {
-	private Vector<Columns> columns;
+	private ArrayList<Columns> columns;
 	private Object primaryKey;
 	
 	
 	public Row() {
 		// TODO Auto-generated constructor stub
-		columns = new Vector<>();
+		columns = new ArrayList<>();
 	}
 
 	@Override
@@ -29,7 +30,7 @@ public class Row implements IRow {
 	}
 
 	
-	public Vector<Columns> getColumns(){
+	public ArrayList<Columns> getColumns(){
 		return columns;
 	}
 	
