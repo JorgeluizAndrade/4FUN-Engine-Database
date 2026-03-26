@@ -7,7 +7,7 @@ import lombok.Getter;
 
 
 @Getter
-public class Row implements IRow {
+public class Row implements IRow, java.io.Serializable {
 	private ArrayList<Columns> columns;
 	private Object primaryKey;
 	

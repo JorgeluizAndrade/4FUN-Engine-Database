@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class Columns {
+public class Columns implements java.io.Serializable {
 	private Object key, value;
 
 	
