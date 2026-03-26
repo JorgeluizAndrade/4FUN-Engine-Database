@@ -1,1 +1,8 @@
 com/engine/fundatabase/App.class
+com/engine/fundatabase/utils/Constants.class
+com/engine/fundatabase/storage/Page.class
+com/engine/fundatabase/storage/IRow.class
+com/engine/fundatabase/storage/Columns.class
+com/engine/fundatabase/utils/serializer/Serializer.class
+com/engine/fundatabase/storage/Row.class
+com/engine/fundatabase/storage/Table.class

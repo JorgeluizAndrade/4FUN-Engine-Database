@@ -1,0 +1,24 @@
+{
+  "heroes": [
+    { "name": "Superman", "real_name": "Clark Kent", "city": "Metropolis" },
+    { "name": "Batman", "real_name": "Bruce Wayne", "city": "Gotham" },
+    { "name": "Wonder Woman", "real_name": "Diana Prince", "city": "Themyscira" },
+    { "name": "Flash", "real_name": "Barry Allen", "city": "Central City" },
+    { "name": "Green Lantern", "real_name": "Hal Jordan", "city": "Coast City" },
+    { "name": "Aquaman", "real_name": "Arthur Curry", "city": "Atlantis" },
+    { "name": "Cyborg", "real_name": "Victor Stone", "city": "Detroit" },
+    { "name": "Green Arrow", "real_name": "Oliver Queen", "city": "Star City" },
+    { "name": "Supergirl", "real_name": "Kara Zor-El", "city": "National City" },
+    { "name": "Batgirl", "real_name": "Barbara Gordon", "city": "Gotham" },
+    { "name": "Nightwing", "real_name": "Dick Grayson", "city": "Bludhaven" },
+    { "name": "Robin", "real_name": "Damian Wayne", "city": "Gotham" },
+    { "name": "Shazam", "real_name": "Billy Batson", "city": "Philadelphia" },
+    { "name": "Hawkgirl", "real_name": "Kendra Saunders", "city": "St. Roch" },
+    { "name": "Martian Manhunter", "real_name": "J'onn J'onzz", "city": "Mars" },
+    { "name": "Zatanna", "real_name": "Zatanna Zatara", "city": "Las Vegas" },
+    { "name": "Blue Beetle", "real_name": "Jaime Reyes", "city": "El Paso" },
+    { "name": "Booster Gold", "real_name": "Michael Carter", "city": "Metropolis" },
+    { "name": "Raven", "real_name": "Rachel Roth", "city": "Jump City" },
+    { "name": "Starfire", "real_name": "Koriand'r", "city": "Jump City" }
+  ]
+}

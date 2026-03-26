@@ -1,0 +1,24 @@
+{
+  "villains": [
+    { "name": "Joker", "real_name": "Unknown", "enemy": "Batman" },
+    { "name": "Lex Luthor", "real_name": "Lex Luthor", "enemy": "Superman" },
+    { "name": "Harley Quinn", "real_name": "Harleen Quinzel", "enemy": "Batman" },
+    { "name": "Darkseid", "real_name": "Uxas", "enemy": "Justice League" },
+    { "name": "Reverse Flash", "real_name": "Eobard Thawne", "enemy": "Flash" },
+    { "name": "Sinestro", "real_name": "Thaal Sinestro", "enemy": "Green Lantern" },
+    { "name": "Black Manta", "real_name": "David Hyde", "enemy": "Aquaman" },
+    { "name": "Deathstroke", "real_name": "Slade Wilson", "enemy": "Teen Titans" },
+    { "name": "Bane", "real_name": "Unknown", "enemy": "Batman" },
+    { "name": "Scarecrow", "real_name": "Jonathan Crane", "enemy": "Batman" },
+    { "name": "Two-Face", "real_name": "Harvey Dent", "enemy": "Batman" },
+    { "name": "Penguin", "real_name": "Oswald Cobblepot", "enemy": "Batman" },
+    { "name": "Riddler", "real_name": "Edward Nigma", "enemy": "Batman" },
+    { "name": "Cheetah", "real_name": "Barbara Minerva", "enemy": "Wonder Woman" },
+    { "name": "Gorilla Grodd", "real_name": "Grodd", "enemy": "Flash" },
+    { "name": "Captain Cold", "real_name": "Leonard Snart", "enemy": "Flash" },
+    { "name": "Brainiac", "real_name": "Vril Dox", "enemy": "Superman" },
+    { "name": "Doomsday", "real_name": "Unknown", "enemy": "Superman" },
+    { "name": "Ra's al Ghul", "real_name": "Ra's al Ghul", "enemy": "Batman" },
+    { "name": "Talia al Ghul", "real_name": "Talia al Ghul", "enemy": "Batman" }
+  ]
+}
