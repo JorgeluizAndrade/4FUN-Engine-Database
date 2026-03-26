@@ -2,9 +2,12 @@ package com.engine.fundatabase.storage;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import com.engine.fundatabase.utils.Constants;
+import com.engine.fundatabase.utils.serializer.Serializer;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -45,9 +48,63 @@ public class Page {
 
 	}
 	
-	public ArrayList<Row> select(Hashtable<String, Object> colNameValue, String operator) {
+	protected ArrayList<Row> select(Hashtable<String, Object> colNameValue, String operator) {
 		return linearSearchWithOperator(this, operator, colNameValue);
 	}
+	
+	
+	protected void insertIntoPage(Row row){
+		int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
+		rows.add(position, row);
+		newMinMax();
+		Serializer.serializePage(name, this);
+	}
+	
+	
+	protected void deleteRowFromPage(Row row) {
+		int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
+		rows.remove(position);
+		newMinMax();
+		Serializer.serializePage(name, this);
+		handleEmptyPage();
+	}
+	
+	protected void updateRowFromPage(Object clusteringKeyValue, Hashtable<String, Object> htblColNameValue) {
+		int pkVectorPoition = pageBinarySearch(clusteringKeyValue);
+		Row oldRow = rows.get(pkVectorPoition);
+		
+
+		for (Columns c : oldRow.getColumns()) {
+			if (htblColNameValue.get(c.getKey()) != null)
+				c.setValue(htblColNameValue.get(c.getKey()));
+		}
+
+		Row newRow = createRow(htblColNameValue);
+		populateToIndex(newTuple, Action.INSERT, indices);
+		Serializer.serializePage(name, this);
+	}
+	
+	
+	
+	private Row createRow(Hashtable<String, Object> colNameValue) {
+		Row ret = new Row();
+		
+		ArrayList<String[]> arr = null;
+		arr.stream().map(String::valueOf)
+		.collect(Collectors.toList());
+		
+		ArrayList<String> columnNames = new ArrayList<>();
+		
+		for (String[] columns : arr) {
+			columnNames.add(columns[1]);
+		}
+		for (String attribute : columnNames) {
+			ret.getColumns().add(new Columns(attribute,
+					colNameValue.get(attribute) == null ? new DBAppNull() : colNameValue.get(attribute)));
+		}
+		return ret;
+	}
+	
 
 	private void newMinMax() {
 		if (rows.size() > 0) {
@@ -136,6 +193,10 @@ public class Page {
 	private static int compare(Object first, Object second) {
 		return ((Comparable) first).compareTo((Comparable) second);
 	}
+	
+	private boolean isEmpty() {
+		return this.rows.size() == 0;
+	}
 
 	private static Object getValueOfColInRow(Row currRow, String colName) {
 
@@ -147,5 +208,13 @@ public class Page {
 			}
 		return ret;
 	}
+	
+	private void handleEmptyPage() {
+		if (rows.isEmpty()) {
+			System.out.println("Empty Page!");
+		}
+	}
+	
+
 
 }

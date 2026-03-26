@@ -10,8 +10,16 @@ import lombok.Setter;
 public class Columns {
 	private Object key, value;
 
+	
+	public Columns(Object key, Object value) {
+		this.key = key;
+		this.value = value;
+	}
+	
 	@Override
 	public String toString() {
 		return "[key: " + key + ", value: " + value + "]";
 	}
+
+	
 }
