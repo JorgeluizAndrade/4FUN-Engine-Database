@@ -8,6 +8,10 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import sql.antlrfiles.SQLiteLexer;
+import sql.antlrfiles.SQLiteParser;
+
+
 
 public class SQLParser {
 
