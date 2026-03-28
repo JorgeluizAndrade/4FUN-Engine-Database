@@ -7,6 +7,9 @@ import com.engine.fundatabase.parser.SQL;
 
 public interface IDatabase {
 	
+	
+	public Iterator<?> executeSQL(String sql);
+	
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType, Hashtable<String, String> htblColNameMin,
 			Hashtable<String, String> htblColNameMax);

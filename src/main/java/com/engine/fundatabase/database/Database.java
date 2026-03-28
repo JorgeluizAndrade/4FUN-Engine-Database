@@ -33,6 +33,13 @@ public class Database implements IDatabase {
 		return null;
 	}
 
+	@Override
+	public Iterator<?> executeSQL(String sql) {
+	    SQLParser parser = new SQLParser(this);
+	    return parser.parse(sql);
+	
+	}
+
 	
 	
 }
