@@ -1,24 +1,15 @@
 package com.engine.fundatabase;
 
-/**
- * Hello world!
- *
- */
-public class App 
-{
+import com.engine.fundatabase.database.Database;
 
+public class App {
 
-    public static int add(int a, int b) {
-        return a + b;
-    }
+    public static void main(String[] args) {
+        Database database = new Database();
+        database.executeSQL("CREATE TABLE heroes (id INT PRIMARY KEY, name TEXT);");
+        database.executeSQL("INSERT INTO heroes (id, name) VALUES (1, 'Batman');");
+        database.executeSQL("SELECT id, name FROM heroes WHERE id = 1;");
 
-
-    public static void main( String[] args )
-    {
-        int res = add (1, 2);
-
-        System.out.println( "Result: " + res );
-
-        System.out.println( "Hello World!" );
+        System.out.println("Pipeline SQL -> ANTLR -> Listener -> Command -> Database executada.");
     }
 }
