@@ -31,6 +31,7 @@ class TableIndexSelectTest {
                 "id",
                 null,
                 3,
+                1,
                 new ArrayList<>(),
                 new Hashtable<>(),
                 new Hashtable<>(),

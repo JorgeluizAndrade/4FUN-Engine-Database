@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.ArrayList;
 
+import com.engine.fundatabase.utils.Action;
 import com.engine.fundatabase.utils.Constants;
 import com.engine.fundatabase.utils.serializer.Serializer;
 
@@ -22,10 +23,15 @@ public class Page implements java.io.Serializable {
     public Page(String tableName) throws RuntimeException {
         this.rows = new ArrayList<>();
         this.tableName = tableName;
-        maxRows = 1000;
+        maxRows = 5;
     }
 
-    public int getSize() {
+    public Page(String tableName, String pagesId) {
+		this.tableName = tableName;
+		this.name = pagesId;
+	}
+
+	public int getSize() {
         return rows.size();
     }
 
@@ -41,7 +47,7 @@ public class Page implements java.io.Serializable {
         return linearSearchWithOperator(this, operator, colNameValue);
     }
 
-    protected void insertIntoPage(Row row) {
+    public void insertIntoPage(Row row, Hashtable<String, BTreeIndex<Row>> indexes) {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.add(position, row);
         newMinMax();
@@ -168,11 +174,20 @@ public class Page implements java.io.Serializable {
             }
         return ret;
     }
+    
+    
+    
+    private void populateToIndex(Row row, Action action, ArrayList<BTreeIndex<?>> indices)  {
+    	
+	}
+
+    
+    
 
     private void handleEmptyPage() {
         if (rows.isEmpty()) {
             System.out.println("Empty Page!");
         }
     }
-
+    
 }
