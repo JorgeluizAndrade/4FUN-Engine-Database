@@ -63,6 +63,6 @@ public class SQLServer {
 
     public static void main(String[] args) throws IOException {
         Database database = new Database();
-        new SQLServer(9090, database).start();
+        new SQLServer(8080, database).start();
     }
 }

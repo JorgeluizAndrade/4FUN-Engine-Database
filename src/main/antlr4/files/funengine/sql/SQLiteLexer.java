@@ -1,4 +1,4 @@
-package sql.antlrfiles;
+package funengine.sql;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

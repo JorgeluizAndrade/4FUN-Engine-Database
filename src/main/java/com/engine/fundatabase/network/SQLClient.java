@@ -14,7 +14,7 @@ public class SQLClient {
             System.out.print("SQL> ");
             String query = scanner.nextLine();
 
-            try (Socket socket = new Socket("127.0.0.1", 9090);
+            try (Socket socket = new Socket("127.0.0.1", 8080);
                  PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 

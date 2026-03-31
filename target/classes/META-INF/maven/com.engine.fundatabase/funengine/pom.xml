@@ -81,21 +81,12 @@
 				<version>3.2.5</version>
 			</plugin>
 
-
-			<!-- Execução da aplicação -->
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.1.0</version>
-				<configuration>
-					<mainClass>com.engine.fundatabase.App</mainClass>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.antlr</groupId>
-				<artifactId>antlr4-maven-plugin</artifactId>
-				<version>${antlr.version}</version> <!-- Use a versão mais
+			<groupId>org.antlr</groupId>
+				<artifactId>
+				antlr4-maven-plugin</artifactId>
+				<version>${antlr.version}</version> <!--
+				Use a versão mais
 				recente -->
 				<executions>
 					<execution>
@@ -112,9 +103,41 @@
 					<visitor>true</visitor>
 				</configuration>
 			</plugin>
-
-
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>server</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.1.0</version>
+						<configuration>
+							<mainClass>com.engine.fundatabase.network.SQLServer</mainClass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>client</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.1.0</version>
+						<configuration>
+							<mainClass>com.engine.fundatabase.network.SQLClient</mainClass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

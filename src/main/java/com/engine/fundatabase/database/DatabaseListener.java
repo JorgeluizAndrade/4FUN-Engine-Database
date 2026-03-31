@@ -11,8 +11,8 @@ import com.engine.fundatabase.database.command.SQLCommand;
 import com.engine.fundatabase.database.command.SelectCommand;
 import com.engine.fundatabase.parser.SQL;
 
-import sql.antlrfiles.SQLiteParser;
-import sql.antlrfiles.SQLiteParserBaseListener;
+import funengine.sql.SQLiteParser;
+import funengine.sql.SQLiteParserBaseListener;
 
 public class DatabaseListener extends SQLiteParserBaseListener {
 
@@ -51,6 +51,8 @@ public class DatabaseListener extends SQLiteParserBaseListener {
         if (clusteringKey == null && !ctx.column_def().isEmpty()) {
             clusteringKey = sanitizeIdentifier(ctx.column_def(0).column_name().getText());
         }
+        
+        System.out.println("clusteringKey: " + clusteringKey + "\n" + "table name: " + tableName);
 
         commands.add(new CreateTableCommand(tableName, clusteringKey, colNameType, colNameMin, colNameMax));
     }

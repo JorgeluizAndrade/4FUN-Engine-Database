@@ -1,84 +1,91 @@
 package com.engine.fundatabase.utils.serializer;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import com.engine.fundatabase.storage.Page;
 import com.engine.fundatabase.storage.Table;
 import com.engine.fundatabase.utils.Constants;
 
-
 public class Serializer {
-	static FileOutputStream fileOut;
-	static ObjectOutputStream out;
-	static FileInputStream fileIn;
-	static ObjectInputStream in;
 
-	public static void serializeTable(Table tableObject)  {
-		try {
-			out = getOutStream(tableObject.getName(), tableObject.getName());
-			out.writeObject(tableObject);
-			out.close();
-			fileOut.close();
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
-	}
+    private final String baseDir;
 
-	public static Table deserializeTable(String tableName)  {
-		try {
-			in = getInputStream(tableName, tableName);
-			Table table = (Table) in.readObject();
-			in.close();
-			fileIn.close();
-			return table;
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
+    public Serializer(String baseDir) {
+        this.baseDir = baseDir;
+    }
 
-	}
+    public void serializeTable(Table tableObject) {
+        String path = getPath(tableObject.getName(), tableObject.getName());
 
-	public static void serializePage(String pageName, Page pageObject)  {
-		try {
-			out = getOutStream(pageObject.getTableName(), pageName);
-			out.writeObject(pageObject);
-			out.close();
-			fileOut.close();
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
-	}
+        File file = new File(path);
+        File parent = file.getParentFile();
 
-	public static Page deserializePage(String tableName, String pageName) {
-		try {
-			in = getInputStream(tableName, pageName);
-			Page records = (Page) in.readObject();
-			in.close();
-			fileIn.close();
-			return records;
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
-	}
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
 
-	public static ObjectOutputStream getOutStream(String tableName, String targetName) throws IOException {
-		String path = getPath(tableName, targetName);
-		fileOut = new FileOutputStream(path);
-		out = new ObjectOutputStream(fileOut);
-		return out;
-	}
+        try (FileOutputStream fileOut = new FileOutputStream(file);
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
 
-	public static ObjectInputStream getInputStream(String tableName, String targetName) throws IOException {
-		String path = getPath(tableName, targetName);
-		fileIn = new FileInputStream(path);
-		in = new ObjectInputStream(fileIn);
-		return in;
-	}
+            out.writeObject(tableObject);
 
-	public static String getPath(String tableName, String targetName) {
-		return tableName + "//" + targetName + Constants.DATA_EXTENSTION;
-	}
+        } catch (IOException e) {
+            throw new RuntimeException("Error serializing table", e);
+        }
+    }
+
+    public Table deserializeTable(String tableName) {
+        String path = getPath(tableName, tableName);
+
+        try (FileInputStream fileIn = new FileInputStream(path);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+
+        	
+        	System.out.println("path: " + path);
+        	
+            return (Table) in.readObject();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error deserializing table", e);
+        }
+    }
+
+    public void serializePage(String pageName, Page pageObject) {
+        String path = getPath(pageObject.getTableName(), pageName);
+
+        File file = new File(path);
+        File parent = file.getParentFile();
+
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+
+        try (FileOutputStream fileOut = new FileOutputStream(file);
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+
+            out.writeObject(pageObject);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error serializing page", e);
+        }
+    }
+
+    public Page deserializePage(String tableName, String pageName) {
+        String path = getPath(tableName, pageName);
+
+        try (FileInputStream fileIn = new FileInputStream(path);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+
+            return (Page) in.readObject();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error deserializing page", e);
+        }
+    }
+
+    private String getPath(String tableName, String targetName) {
+        return baseDir + File.separator +
+               tableName + File.separator +
+               targetName + Constants.DATA_EXTENSTION;
+    }
 }

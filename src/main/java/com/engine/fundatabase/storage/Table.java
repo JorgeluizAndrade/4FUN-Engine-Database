@@ -27,7 +27,23 @@ public class Table implements java.io.Serializable {
 	private Hashtable<String, String> colNameType, colNameMin, colNameMax;
 	private String primaryKeyType;
 	private Hashtable<String, BTreeIndex<Row>> indexes;
+	
+	private static Serializer serializer;
 
+	
+	public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
+			Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) {
+
+	
+		this.name = strClusteringKeyColumn;
+		this.pkColumn = strClusteringKeyColumn;
+		this.colNameType = htblColNameType;
+		this.colNameMin = htblColNameMin;
+		this.colNameMax = htblColNameMax;
+	}
+
+	
+	
 	public boolean isEmpaty() {
 		return pagesId.size() == 0;
 	}
@@ -139,7 +155,7 @@ public class Table implements java.io.Serializable {
 
 	public Page getPageAtPosition(int position) {
 		String pageId = pagesId.get(position);
-		return Serializer.deserializePage(this.getName(), pageId);
+		return serializer.deserializePage(this.getName(), pageId);
 	}
 
 	public String getPKColumn() {
@@ -153,7 +169,7 @@ public class Table implements java.io.Serializable {
 
 		while (low <= high) {
 			int mid = (low + high) / 2;
-			Page currPage = Serializer.deserializePage(table.getName(), table.getPagesId().get(mid));
+			Page currPage = serializer.deserializePage(table.getName(), table.getPagesId().get(mid));
 			int compareWithMin = compare(tuplePrimaryKey, currPage.getMinPK());
 			int compWithMax = compare(tuplePrimaryKey, currPage.getMaxPK());
 			if (compWithMax <= 0 && compareWithMin >= 0) {
@@ -171,4 +187,5 @@ public class Table implements java.io.Serializable {
 		return ((Comparable) first).compareTo(second);
 	}
 
+	
 }
