@@ -52,6 +52,8 @@ public class DatabaseListener extends SQLiteParserBaseListener {
             clusteringKey = sanitizeIdentifier(ctx.column_def(0).column_name().getText());
         }
         
+        System.out.println("PASSEI AQUI DatabaseListener");
+        
         System.out.println("clusteringKey: " + clusteringKey + "\n" + "table name: " + tableName);
 
         commands.add(new CreateTableCommand(tableName, clusteringKey, colNameType, colNameMin, colNameMax));
@@ -87,6 +89,7 @@ public class DatabaseListener extends SQLiteParserBaseListener {
         if (ctx.select_core().isEmpty()) {
             return;
         }
+        System.out.println("PASSEI AQUI DatabaseListener -> SELECT");
 
         SQLiteParser.Select_coreContext core = ctx.select_core(0);
 
@@ -104,6 +107,8 @@ public class DatabaseListener extends SQLiteParserBaseListener {
                 terms.add(term);
             }
         }
+        System.out.println("NO LISTENER(SELECT) AINDA : " + projectionColumns);
+        
 
         commands.add(new SelectCommand(projectionColumns, terms.toArray(new SQL[0]), operators));
     }

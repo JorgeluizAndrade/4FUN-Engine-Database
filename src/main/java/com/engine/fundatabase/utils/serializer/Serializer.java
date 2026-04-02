@@ -16,6 +16,9 @@ public class Serializer {
 
     public void serializeTable(Table tableObject) {
         String path = getPath(tableObject.getName(), tableObject.getName());
+        
+        System.out.println("PASSEI AQUI serializeTable: " + tableObject.getName());
+
 
         File file = new File(path);
         File parent = file.getParentFile();
@@ -36,6 +39,10 @@ public class Serializer {
 
     public Table deserializeTable(String tableName) {
         String path = getPath(tableName, tableName);
+        
+        
+        System.out.println("PASSEI AQUI deserializeTable");
+
 
         try (FileInputStream fileIn = new FileInputStream(path);
              ObjectInputStream in = new ObjectInputStream(fileIn)) {

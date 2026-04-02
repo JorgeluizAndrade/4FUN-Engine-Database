@@ -1,4 +1,3 @@
-/home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/database/SQLParser.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/storage/Page.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/storage/IRow.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/utils/serializer/Serializer.java
@@ -10,6 +9,7 @@
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/storage/Table.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/database/command/SQLCommand.java
 /home/jojo/projects/4fun-database/funengine/src/main/antlr4/files/funengine/sql/SQLiteParserListener.java
+/home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/parser/SQLParser.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/network/SQLClient.java
 /home/jojo/projects/4fun-database/funengine/src/main/antlr4/files/funengine/sql/SQLiteLexer.java
 /home/jojo/projects/4fun-database/funengine/src/main/java/com/engine/fundatabase/utils/Constants.java

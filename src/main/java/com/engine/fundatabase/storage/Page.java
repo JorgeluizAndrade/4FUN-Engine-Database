@@ -14,13 +14,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Page implements java.io.Serializable {
-    private String name;
+    private static final long serialVersionUID = 5342433131068036131L;
+	private String name;
     private int maxRows;
     private ArrayList<Row> rows;
     private Object minPK, maxPK;
     private String tableName;
     
-	private Serializer serializer;
+    private transient Serializer serializer;
+
 
     public Page(String tableName) throws RuntimeException {
         this.rows = new ArrayList<>();
@@ -45,12 +47,20 @@ public class Page implements java.io.Serializable {
         return res;
 
     }
+    
+    private void initSerializer() {
+        if (serializer == null) {
+            serializer = new Serializer(tableName);
+        }
+    }
+
 
     protected ArrayList<Row> select(Hashtable<String, Object> colNameValue, String operator) {
         return linearSearchWithOperator(this, operator, colNameValue);
     }
 
     public void insertIntoPage(Row row, Hashtable<String, BTreeIndex<Row>> indexes) {
+    	initSerializer();
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.add(position, row);
         newMinMax();

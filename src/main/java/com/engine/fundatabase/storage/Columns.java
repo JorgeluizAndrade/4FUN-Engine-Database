@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 public class Columns implements java.io.Serializable {
+	private static final long serialVersionUID = -4830919896158603818L;
 	private Object key, value;
 
 	

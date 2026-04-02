@@ -7,7 +7,8 @@ import com.engine.fundatabase.utils.Action;
 
 public class BTreeIndex<V> implements java.io.Serializable {
 
-    private final int minimumDegree;
+    private static final long serialVersionUID = -3089355417516000977L;
+	private final int minimumDegree;
     private Node<V> root;
 
     public BTreeIndex(int minimumDegree) {

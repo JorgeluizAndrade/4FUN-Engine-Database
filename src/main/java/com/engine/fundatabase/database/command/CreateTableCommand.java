@@ -28,6 +28,8 @@ public class CreateTableCommand implements SQLCommand {
 
     @Override
     public Iterator<?> execute(Database database) {
+        System.out.println("PASSEI AQUI CreateTableCommand(execute)");
+
         database.createTable(tableName, clusteringKeyColumn, colNameType, colNameMin, colNameMax);
         return null;
     }

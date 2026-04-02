@@ -14,38 +14,66 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@AllArgsConstructor
 @Getter
 @Setter
 public class Table implements java.io.Serializable {
+
+	private static final long serialVersionUID = -4511440317382137672L;
 
 	private String name, pkColumn;
 	private Row row;
 	private int size;
 	private int cntPage;
-	private ArrayList<String> pagesId;
+	private ArrayList<String> pagesId = new ArrayList<>();
 	private Hashtable<String, String> colNameType, colNameMin, colNameMax;
 	private String primaryKeyType;
-	private Hashtable<String, BTreeIndex<Row>> indexes;
-	
-	private static Serializer serializer;
+	private Hashtable<String, BTreeIndex<Row>> indexes = new Hashtable<String, BTreeIndex<Row>>();;
 
-	
+	private Serializer serializer;
+
 	public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
 			Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) {
 
-	
-		this.name = strClusteringKeyColumn;
+		this.name = strTableName;
 		this.pkColumn = strClusteringKeyColumn;
 		this.colNameType = htblColNameType;
 		this.colNameMin = htblColNameMin;
 		this.colNameMax = htblColNameMax;
+		size = 0;
+		cntPage = 0;
+		primaryKeyType = colNameType.get(pkColumn);
 	}
 
+	public Table(String name, String pkColumn, Row row, int size, int cntPage, ArrayList<String> pagesId,
+			Hashtable<String, String> colNameType, Hashtable<String, String> colNameMin,
+			Hashtable<String, String> colNameMax, String primaryKeyType, Hashtable<String, BTreeIndex<Row>> indexes) {
+
+		this.name = name;
+		this.pkColumn = pkColumn;
+		this.row = new Row();
+		
+		this.size = size;
+		this.cntPage = cntPage;
+		this.pagesId = pagesId != null ? pagesId : new ArrayList<>();
+
+		this.colNameType = colNameType;
+		this.colNameMin = colNameMin;
+		this.colNameMax = colNameMax;
+
+		this.primaryKeyType = primaryKeyType != null ? primaryKeyType
+				: (colNameType != null ? colNameType.get(pkColumn) : null);
+
+		this.indexes = indexes != null ? indexes : new Hashtable<>();
+
+	}
 	
-	
+
+	private void initSerializer() {
+		this.serializer = new Serializer(this.name);
+	}
+
 	public boolean isEmpaty() {
-		return pagesId.size() == 0;
+		return pagesId == null || pagesId.isEmpty();
 	}
 
 	public void createIndex(String columnName, int minimumDegree) {
@@ -78,6 +106,8 @@ public class Table implements java.io.Serializable {
 			Page page = getPageAtPosition(i);
 			result.addAll(page.select(colNameValue, operator));
 		}
+
+		System.out.println("PASSEI AQUI TABLE DSA");
 		return result;
 	}
 
@@ -92,6 +122,8 @@ public class Table implements java.io.Serializable {
 
 			page.insertIntoPage(row, indexes);
 		}
+
+		System.out.println("PASSEI AQUI TABLE DSA INSERT ROW");
 
 		size++;
 
@@ -155,6 +187,7 @@ public class Table implements java.io.Serializable {
 
 	public Page getPageAtPosition(int position) {
 		String pageId = pagesId.get(position);
+		initSerializer();
 		return serializer.deserializePage(this.getName(), pageId);
 	}
 
@@ -169,7 +202,7 @@ public class Table implements java.io.Serializable {
 
 		while (low <= high) {
 			int mid = (low + high) / 2;
-			Page currPage = serializer.deserializePage(table.getName(), table.getPagesId().get(mid));
+			Page currPage = new Page(null);
 			int compareWithMin = compare(tuplePrimaryKey, currPage.getMinPK());
 			int compWithMax = compare(tuplePrimaryKey, currPage.getMaxPK());
 			if (compWithMax <= 0 && compareWithMin >= 0) {
@@ -183,9 +216,8 @@ public class Table implements java.io.Serializable {
 		return Math.min(low, n - 1);
 	}
 
-	private static int compare(Object first, Object second) {
-		return ((Comparable) first).compareTo(second);
-	}
+    private static int compare(Object first, Object second) {
+        return ((Comparable) first).compareTo(second);
+    }
 
-	
 }

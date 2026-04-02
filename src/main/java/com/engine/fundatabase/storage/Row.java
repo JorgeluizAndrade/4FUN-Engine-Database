@@ -8,6 +8,7 @@ import lombok.Getter;
 
 @Getter
 public class Row implements IRow, java.io.Serializable {
+	private static final long serialVersionUID = -5475137508122924597L;
 	private ArrayList<Columns> columns;
 	private Object primaryKey;
 	
