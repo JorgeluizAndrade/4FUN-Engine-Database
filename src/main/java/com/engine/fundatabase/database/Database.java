@@ -31,6 +31,7 @@ public class Database implements IDatabase {
 			Hashtable<String, String> htblColNameMax) {
 		// TODO Auto-generated method stub
 		Table table = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
+		table.initializePhysicalStorage();
 		
 		System.out.println("PASSEI AQUI: CREATE TABLE -> " + strTableName);
 

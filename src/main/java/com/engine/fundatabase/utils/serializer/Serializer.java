@@ -11,7 +11,7 @@ public class Serializer {
     private final String baseDir;
 
     public Serializer(String baseDir) {
-        this.baseDir = baseDir;
+        this.baseDir = (baseDir == null || baseDir.isBlank()) ? "data" : baseDir;
     }
 
     public void serializeTable(Table tableObject) {
