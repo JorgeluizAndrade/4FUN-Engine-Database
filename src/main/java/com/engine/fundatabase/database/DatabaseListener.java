@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import com.engine.fundatabase.database.command.CreateTableCommand;
 import com.engine.fundatabase.database.command.InsertCommand;
 import com.engine.fundatabase.database.command.SQLCommand;
 import com.engine.fundatabase.database.command.SelectCommand;
 import com.engine.fundatabase.parser.SQL;
+import com.engine.fundatabase.utils.Constants;
 
 import funengine.sql.SQLiteParser;
 import funengine.sql.SQLiteParserBaseListener;
@@ -99,34 +101,55 @@ public class DatabaseListener extends SQLiteParserBaseListener {
         }
 
         List<SQL> terms = new ArrayList<>();
-        String[] operators = new String[0];
+        List<String> operators = new ArrayList<>();
 
         if (core.where_expr != null) {
-            SQL term = parseWhereExpression(core.where_expr, core);
-            if (term != null) {
-                terms.add(term);
-            }
+            parseWhereExpression(core.where_expr, core, terms, operators);
         }
         System.out.println("NO LISTENER(SELECT) AINDA : " + projectionColumns);
         
 
-        commands.add(new SelectCommand(projectionColumns, terms.toArray(new SQL[0]), operators));
+        commands.add(new SelectCommand(projectionColumns, terms.toArray(new SQL[0]), operators.toArray(new String[0])));
     }
 
-    private SQL parseWhereExpression(SQLiteParser.ExprContext exprContext, SQLiteParser.Select_coreContext core) {
-        if (exprContext == null || exprContext.children == null || exprContext.children.size() < 3) {
-            return null;
+    private void parseWhereExpression(SQLiteParser.ExprContext exprContext, SQLiteParser.Select_coreContext core,
+            List<SQL> terms, List<String> operators) {
+        if (exprContext == null || exprContext.children == null || exprContext.children.isEmpty()) {
+            return;
+        }
+
+        if (exprContext.children.size() == 3 && exprContext.expr().size() == 2) {
+            String op = exprContext.getChild(1).getText().toLowerCase(Locale.ROOT);
+            if (Constants.AND_OPERATION.equals(op) || Constants.OR_OPERATION.equals(op) || Constants.XOR_OPERATION.equals(op)) {
+                parseWhereExpression(exprContext.expr(0), core, terms, operators);
+                operators.add(op);
+                parseWhereExpression(exprContext.expr(1), core, terms, operators);
+                return;
+            }
+        }
+        if (exprContext.children.size() < 3) {
+            return;
         }
 
         SQL term = new SQL();
-        term._strTableName = core.join_clause() == null
-                ? ""
-                : sanitizeIdentifier(core.join_clause().table_or_subquery(0).table_name().getText());
+        term._strTableName = resolveTableName(core);
         term._strColumnName = sanitizeIdentifier(exprContext.getChild(0).getText());
         term._strOperator = exprContext.getChild(1).getText();
         term._objValue = parseValue(exprContext.getChild(2).getText());
+        terms.add(term);
+    }
 
-        return term;
+    private String resolveTableName(SQLiteParser.Select_coreContext core) {
+        if (core.join_clause() != null && core.join_clause().table_or_subquery() != null
+                && !core.join_clause().table_or_subquery().isEmpty()
+                && core.join_clause().table_or_subquery(0).table_name() != null) {
+            return sanitizeIdentifier(core.join_clause().table_or_subquery(0).table_name().getText());
+        }
+        if (core.table_or_subquery() != null && !core.table_or_subquery().isEmpty()
+                && core.table_or_subquery(0).table_name() != null) {
+            return sanitizeIdentifier(core.table_or_subquery(0).table_name().getText());
+        }
+        return "";
     }
 
     private Object parseValue(String rawText) {

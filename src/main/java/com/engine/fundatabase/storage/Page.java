@@ -136,6 +136,9 @@ public class Page implements java.io.Serializable {
     }
 
     private static boolean operatorBasedSelection(Object firstOperand, Object secondOperand, String operator) {
+        if (firstOperand == null || firstOperand instanceof DBAppNull) {
+            return Constants.NOT_EQUAL.equals(operator) && secondOperand != null && !(secondOperand instanceof DBAppNull);
+        }
         if (operator.equals(Constants.EQUAL))
             return compare(firstOperand, secondOperand) == 0;
         if (operator.equals(Constants.GREATER_THAN))
@@ -170,7 +173,24 @@ public class Page implements java.io.Serializable {
     }
 
     private static int compare(Object first, Object second) {
-        return ((Comparable) first).compareTo(second);
+        if (first == second) {
+            return 0;
+        }
+        if (first == null || first instanceof DBAppNull) {
+            return -1;
+        }
+        if (second == null || second instanceof DBAppNull) {
+            return 1;
+        }
+        if (first instanceof Number && second instanceof Number) {
+            Double firstDouble = ((Number) first).doubleValue();
+            Double secondDouble = ((Number) second).doubleValue();
+            return firstDouble.compareTo(secondDouble);
+        }
+        if (first instanceof Comparable) {
+            return ((Comparable) first).compareTo(second);
+        }
+        throw new IllegalArgumentException("Valores não comparáveis: " + first + " e " + second);
     }
 
     private boolean isEmpty() {

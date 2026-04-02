@@ -1,16 +1,18 @@
 package com.engine.fundatabase.database;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import com.engine.fundatabase.parser.SQL;
 import com.engine.fundatabase.parser.SQLParser;
 import com.engine.fundatabase.storage.Row;
 import com.engine.fundatabase.storage.Table;
+import com.engine.fundatabase.utils.Constants;
 import com.engine.fundatabase.utils.serializer.Serializer;
 
 public class Database implements IDatabase {
@@ -76,6 +78,11 @@ public class Database implements IDatabase {
 	}
 
 	private static ArrayList<Row> selectSimple(SQL[] arrSQLTerms, String[] strarrOperators) {
+		if (arrSQLTerms == null || arrSQLTerms.length == 0) {
+			return new ArrayList<>();
+		}
+
+		Table table = new Serializer("data").deserializeTable(arrSQLTerms[0]._strTableName);
 		ArrayList<ArrayList<Row>> result = new ArrayList<>();
 		for (int i = 0; i < arrSQLTerms.length; i++) {
 
@@ -89,7 +96,7 @@ public class Database implements IDatabase {
 				    + arrSQLTerms[i]._objValue.getClass() + ")");
 
 							
-			result.add(selectFromTableHelper(arrSQLTerms[i]._strTableName, colNameValue, arrSQLTerms[i]._strOperator));
+			result.add(selectFromTableHelper(table, colNameValue, arrSQLTerms[i]._strOperator));
 		}
 		
 		
@@ -100,23 +107,72 @@ public class Database implements IDatabase {
 	private static ArrayList<Row> applyArrOperators(ArrayList<ArrayList<Row>> selections, String[] strarrOperators) {
 
 		if (selections == null || selections.isEmpty()) {
-			System.out.println("Nenhuma seleção encontrada.");
 			return new ArrayList<>();
+		}
+		if (selections.size() == 1) {
+			return new ArrayList<>(selections.get(0));
+		}
+		if (strarrOperators == null || strarrOperators.length != selections.size() - 1) {
+			throw new IllegalArgumentException("Quantidade de operadores inválida para os termos do WHERE.");
 		}
 
 		ArrayList<Row> result = new ArrayList<>(selections.get(0));
-
-		System.out.println("RESPONSE: " + result);
+		for (int i = 0; i < strarrOperators.length; i++) {
+			result = applyOperator(result, selections.get(i + 1), strarrOperators[i]);
+		}
 		return result;
 	}
 
-	private static ArrayList<Row> selectFromTableHelper(String _strTableName, Hashtable<String, Object> colNameValue,
-			String _strOperator) {
-		
-		Table table = new Serializer("data").deserializeTable(_strTableName);
-		System.out.println("DEBUG TABLE DATA: " + table);
-		System.out.println("ROWS: " + table.getRow());
+	private static ArrayList<Row> applyOperator(ArrayList<Row> leftSelection, ArrayList<Row> rightSelection, String operator) {
+		String normalizedOperator = operator == null ? "" : operator.trim().toLowerCase(Locale.ROOT);
 
+		Map<Object, Row> leftRows = mapByPrimaryKey(leftSelection);
+		Map<Object, Row> rightRows = mapByPrimaryKey(rightSelection);
+
+		if (Constants.AND_OPERATION.equals(normalizedOperator)) {
+			ArrayList<Row> intersection = new ArrayList<>();
+			for (Map.Entry<Object, Row> entry : leftRows.entrySet()) {
+				if (rightRows.containsKey(entry.getKey())) {
+					intersection.add(entry.getValue());
+				}
+			}
+			return intersection;
+		}
+
+		if (Constants.OR_OPERATION.equals(normalizedOperator)) {
+			LinkedHashMap<Object, Row> union = new LinkedHashMap<>(leftRows);
+			union.putAll(rightRows);
+			return new ArrayList<>(union.values());
+		}
+
+		if (Constants.XOR_OPERATION.equals(normalizedOperator)) {
+			LinkedHashMap<Object, Row> xor = new LinkedHashMap<>();
+			for (Map.Entry<Object, Row> entry : leftRows.entrySet()) {
+				if (!rightRows.containsKey(entry.getKey())) {
+					xor.put(entry.getKey(), entry.getValue());
+				}
+			}
+			for (Map.Entry<Object, Row> entry : rightRows.entrySet()) {
+				if (!leftRows.containsKey(entry.getKey())) {
+					xor.put(entry.getKey(), entry.getValue());
+				}
+			}
+			return new ArrayList<>(xor.values());
+		}
+
+		throw new IllegalArgumentException("Operador lógico não suportado: " + operator);
+	}
+
+	private static Map<Object, Row> mapByPrimaryKey(ArrayList<Row> rows) {
+		LinkedHashMap<Object, Row> mappedRows = new LinkedHashMap<>();
+		for (Row row : rows) {
+			mappedRows.put(row.getPrimaryKey(), row);
+		}
+		return mappedRows;
+	}
+
+	private static ArrayList<Row> selectFromTableHelper(Table table, Hashtable<String, Object> colNameValue,
+			String _strOperator) {
 		return table.select(colNameValue, _strOperator);
 
 	}
