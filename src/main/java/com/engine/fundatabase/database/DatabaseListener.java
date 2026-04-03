@@ -70,20 +70,21 @@ public class DatabaseListener extends SQLiteParserBaseListener {
 			columns.add(sanitizeIdentifier(column.getText()));
 		}
 
-		Hashtable<String, Object> values = new Hashtable<>();
 		SQLiteParser.Select_stmtContext selectStmt = ctx.select_stmt();
 		if (selectStmt != null && !selectStmt.select_core().isEmpty()) {
 			SQLiteParser.Select_coreContext core = selectStmt.select_core(0);
 			if (core.values_clause() != null && !core.values_clause().value_row().isEmpty()) {
-				List<SQLiteParser.ExprContext> exprs = core.values_clause().value_row(0).expr();
-				for (int i = 0; i < exprs.size(); i++) {
-					String columnName = columns.isEmpty() ? "col" + (i + 1) : columns.get(i);
-					values.put(columnName, parseValue(exprs.get(i).getText()));
+				for (SQLiteParser.Value_rowContext valueRow : core.values_clause().value_row()) {
+					Hashtable<String, Object> values = new Hashtable<>();
+					List<SQLiteParser.ExprContext> exprs = valueRow.expr();
+					for (int i = 0; i < exprs.size(); i++) {
+						String columnName = columns.isEmpty() ? "col" + (i + 1) : columns.get(i);
+						values.put(columnName, parseValue(exprs.get(i).getText()));
+					}
+					commands.add(new InsertCommand(tableName, values));
 				}
 			}
 		}
-
-		commands.add(new InsertCommand(tableName, values));
 	}
 
 	@Override

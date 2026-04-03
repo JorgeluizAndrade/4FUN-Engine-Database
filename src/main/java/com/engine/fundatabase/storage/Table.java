@@ -27,7 +27,7 @@ public class Table implements java.io.Serializable {
 	private String primaryKeyType;
 	private Hashtable<String, BTreeIndex<Row>> indexes = new Hashtable<String, BTreeIndex<Row>>();;
 
-	private Serializer serializer;
+	private transient Serializer serializer;
 
 	public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
 			Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) {
@@ -124,20 +124,46 @@ public class Table implements java.io.Serializable {
 			insertNewPage(row);
 		} else {
 			int position = binarySearchPages(this, row.getPrimaryKey());
-			Page page = getPageAtPosition(position);
-
-			page.insertIntoPage(row, indexes);
+			insertAtPagePosition(position, row);
 		}
+		updateIndexesForRow(row);
 
 		System.out.println("PASSEI AQUI TABLE DSA INSERT ROW");
 
 		size++;
+		persistTable();
 
 	}
 
 	private void insertNewPage(Row row) {
 		Page page = initializePage();
 		page.insertIntoPage(row, indexes);
+		persistTable();
+	}
+
+	private void insertAtPagePosition(int position, Row row) {
+		Page page = getPageAtPosition(position);
+		page.insertIntoPage(row, indexes);
+		handleOverflow(position);
+	}
+
+	private void handleOverflow(int position) {
+		Page page = getPageAtPosition(position);
+		if (page.getSize() <= page.getMaxRows()) {
+			return;
+		}
+
+		Row overflowRow = page.removeLastRow(page.getRows());
+		page.persist();
+
+		int nextPosition = position + 1;
+		if (nextPosition >= pagesId.size()) {
+			Page newPage = initializePage();
+			newPage.insertIntoPage(overflowRow, indexes);
+		} else {
+			insertAtPagePosition(nextPosition, overflowRow);
+		}
+		persistTable();
 	}
 
 	private Page initializePage() {
@@ -195,6 +221,25 @@ public class Table implements java.io.Serializable {
 		String pageId = pagesId.get(position);
 		initSerializer();
 		return serializer.deserializePage(this.getName(), pageId);
+	}
+
+	private void updateIndexesForRow(Row row) {
+		if (indexes == null || indexes.isEmpty()) {
+			return;
+		}
+		for (Entry<String, BTreeIndex<Row>> indexEntry : indexes.entrySet()) {
+			String columnName = indexEntry.getKey();
+			BTreeIndex<Row> index = indexEntry.getValue();
+			Object value = row.getValueColumn(columnName);
+			if (value != null && !(value instanceof DBAppNull)) {
+				index.insert(value, row);
+			}
+		}
+	}
+
+	private void persistTable() {
+		initSerializer();
+		serializer.serializeTable(this);
 	}
 
 	public String getPKColumn() {
