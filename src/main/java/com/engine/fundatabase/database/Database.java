@@ -48,9 +48,17 @@ public class Database implements IDatabase {
 
 	@Override
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) {
-		// TODO Auto-generated method stub
+		if (strTableName == null || strTableName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Table name cannot be null or empty.");
+		}
+		if (htblColNameValue == null || htblColNameValue.isEmpty()) {
+			throw new IllegalArgumentException("Inserted values cannot be null or empty.");
+		}
 
 		Table table = serializer.deserializeTable(strTableName);
+		if (table == null) {
+			throw new IllegalArgumentException("Table not found: " + strTableName);
+		}
 
 		System.out.println("table name: " + strTableName + "\n col name" + htblColNameValue);
 
