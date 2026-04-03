@@ -67,7 +67,15 @@ public class Table implements java.io.Serializable {
 	
 
 	private void initSerializer() {
-		this.serializer = new Serializer(this.name);
+		this.serializer = new Serializer("data");
+	}
+
+	public void initializePhysicalStorage() {
+		if (!isEmpaty()) {
+			return;
+		}
+		Page page = initializePage();
+		page.persist();
 	}
 
 	public boolean isEmpaty() {

@@ -18,76 +18,76 @@ import funengine.sql.SQLiteParserBaseListener;
 
 public class DatabaseListener extends SQLiteParserBaseListener {
 
-    private final Database database;
-    private final List<SQLCommand> commands = new ArrayList<>();
-    private Iterator<?> result;
+	private final Database database;
+	private final List<SQLCommand> commands = new ArrayList<>();
+	private Iterator<?> result;
 
-    public DatabaseListener(Database database) {
-        this.database = database;
-    }
+	public DatabaseListener(Database database) {
+		this.database = database;
+	}
 
-    @Override
-    public void exitCreate_table_stmt(SQLiteParser.Create_table_stmtContext ctx) {
-        String tableName = sanitizeIdentifier(ctx.table_name().getText());
+	@Override
+	public void exitCreate_table_stmt(SQLiteParser.Create_table_stmtContext ctx) {
+		String tableName = sanitizeIdentifier(ctx.table_name().getText());
 
-        Hashtable<String, String> colNameType = new Hashtable<>();
-        Hashtable<String, String> colNameMin = new Hashtable<>();
-        Hashtable<String, String> colNameMax = new Hashtable<>();
+		Hashtable<String, String> colNameType = new Hashtable<>();
+		Hashtable<String, String> colNameMin = new Hashtable<>();
+		Hashtable<String, String> colNameMax = new Hashtable<>();
 
-        String clusteringKey = null;
-        for (SQLiteParser.Column_defContext columnDef : ctx.column_def()) {
-            String columnName = sanitizeIdentifier(columnDef.column_name().getText());
-            String columnType = columnDef.type_name() == null ? "TEXT" : columnDef.type_name().getText();
-            colNameType.put(columnName, columnType);
-            colNameMin.put(columnName, "");
-            colNameMax.put(columnName, "");
+		String clusteringKey = null;
+		for (SQLiteParser.Column_defContext columnDef : ctx.column_def()) {
+			String columnName = sanitizeIdentifier(columnDef.column_name().getText());
+			String columnType = columnDef.type_name() == null ? "TEXT" : columnDef.type_name().getText();
+			colNameType.put(columnName, columnType);
+			colNameMin.put(columnName, "");
+			colNameMax.put(columnName, "");
 
-            for (SQLiteParser.Column_constraintContext constraint : columnDef.column_constraint()) {
-                String normalized = constraint.getText().toUpperCase();
-                if (normalized.contains("PRIMARY") && normalized.contains("KEY")) {
-                    clusteringKey = columnName;
-                }
-            }
-        }
+			for (SQLiteParser.Column_constraintContext constraint : columnDef.column_constraint()) {
+				String normalized = constraint.getText().toUpperCase();
+				if (normalized.contains("PRIMARY") && normalized.contains("KEY")) {
+					clusteringKey = columnName;
+				}
+			}
+		}
 
-        if (clusteringKey == null && !ctx.column_def().isEmpty()) {
-            clusteringKey = sanitizeIdentifier(ctx.column_def(0).column_name().getText());
-        }
-        
-        System.out.println("PASSEI AQUI DatabaseListener");
-        
-        System.out.println("clusteringKey: " + clusteringKey + "\n" + "table name: " + tableName);
+		if (clusteringKey == null && !ctx.column_def().isEmpty()) {
+			clusteringKey = sanitizeIdentifier(ctx.column_def(0).column_name().getText());
+		}
 
-        commands.add(new CreateTableCommand(tableName, clusteringKey, colNameType, colNameMin, colNameMax));
-    }
+		System.out.println("PASSEI AQUI DatabaseListener");
 
-    @Override
-    public void exitInsert_stmt(SQLiteParser.Insert_stmtContext ctx) {
-        String tableName = sanitizeIdentifier(ctx.table_name().getText());
+		System.out.println("clusteringKey: " + clusteringKey + "\n" + "table name: " + tableName);
 
-        List<String> columns = new ArrayList<>();
-        for (SQLiteParser.Column_nameContext column : ctx.column_name()) {
-            columns.add(sanitizeIdentifier(column.getText()));
-        }
+		commands.add(new CreateTableCommand(tableName, clusteringKey, colNameType, colNameMin, colNameMax));
+	}
 
-        Hashtable<String, Object> values = new Hashtable<>();
-        SQLiteParser.Select_stmtContext selectStmt = ctx.select_stmt();
-        if (selectStmt != null && !selectStmt.select_core().isEmpty()) {
-            SQLiteParser.Select_coreContext core = selectStmt.select_core(0);
-            if (core.values_clause() != null && !core.values_clause().value_row().isEmpty()) {
-                List<SQLiteParser.ExprContext> exprs = core.values_clause().value_row(0).expr();
-                for (int i = 0; i < exprs.size(); i++) {
-                    String columnName = columns.isEmpty() ? "col" + (i + 1) : columns.get(i);
-                    values.put(columnName, parseValue(exprs.get(i).getText()));
-                }
-            }
-        }
+	@Override
+	public void exitInsert_stmt(SQLiteParser.Insert_stmtContext ctx) {
+		String tableName = sanitizeIdentifier(ctx.table_name().getText());
 
-        commands.add(new InsertCommand(tableName, values));
-    }
+		List<String> columns = new ArrayList<>();
+		for (SQLiteParser.Column_nameContext column : ctx.column_name()) {
+			columns.add(sanitizeIdentifier(column.getText()));
+		}
 
-    @Override
-    public void exitSelect_stmt(SQLiteParser.Select_stmtContext ctx) {
+		Hashtable<String, Object> values = new Hashtable<>();
+		SQLiteParser.Select_stmtContext selectStmt = ctx.select_stmt();
+		if (selectStmt != null && !selectStmt.select_core().isEmpty()) {
+			SQLiteParser.Select_coreContext core = selectStmt.select_core(0);
+			if (core.values_clause() != null && !core.values_clause().value_row().isEmpty()) {
+				List<SQLiteParser.ExprContext> exprs = core.values_clause().value_row(0).expr();
+				for (int i = 0; i < exprs.size(); i++) {
+					String columnName = columns.isEmpty() ? "col" + (i + 1) : columns.get(i);
+					values.put(columnName, parseValue(exprs.get(i).getText()));
+				}
+			}
+		}
+
+		commands.add(new InsertCommand(tableName, values));
+	}
+
+	@Override
+	public void exitSelect_stmt(SQLiteParser.Select_stmtContext ctx) {
         if (ctx.select_core().isEmpty()) {
             return;
         }
@@ -101,101 +101,79 @@ public class DatabaseListener extends SQLiteParserBaseListener {
         }
 
         List<SQL> terms = new ArrayList<>();
-        List<String> operators = new ArrayList<>();
+        String[] operators = new String[0];
 
         if (core.where_expr != null) {
-            parseWhereExpression(core.where_expr, core, terms, operators);
+            SQL term = parseWhereExpression(core.where_expr, core);
+            if (term != null) {
+                terms.add(term);
+            }
         }
         System.out.println("NO LISTENER(SELECT) AINDA : " + projectionColumns);
         
 
-        commands.add(new SelectCommand(projectionColumns, terms.toArray(new SQL[0]), operators.toArray(new String[0])));
+        commands.add(new SelectCommand(projectionColumns, terms.toArray(new SQL[0]), operators));
     }
-
-    private void parseWhereExpression(SQLiteParser.ExprContext exprContext, SQLiteParser.Select_coreContext core,
-            List<SQL> terms, List<String> operators) {
-        if (exprContext == null || exprContext.children == null || exprContext.children.isEmpty()) {
-            return;
-        }
-
-        if (exprContext.children.size() == 3 && exprContext.expr().size() == 2) {
-            String op = exprContext.getChild(1).getText().toLowerCase(Locale.ROOT);
-            if (Constants.AND_OPERATION.equals(op) || Constants.OR_OPERATION.equals(op) || Constants.XOR_OPERATION.equals(op)) {
-                parseWhereExpression(exprContext.expr(0), core, terms, operators);
-                operators.add(op);
-                parseWhereExpression(exprContext.expr(1), core, terms, operators);
-                return;
-            }
-        }
-        if (exprContext.children.size() < 3) {
-            return;
+		
+	
+	private SQL parseWhereExpression(SQLiteParser.ExprContext exprContext, SQLiteParser.Select_coreContext core) {
+        if (exprContext == null || exprContext.children == null || exprContext.children.size() < 3) {
+            return null;
         }
 
         SQL term = new SQL();
-        term._strTableName = resolveTableName(core);
+        term._strTableName = core.join_clause() == null
+                ? ""
+                : sanitizeIdentifier(core.join_clause().table_or_subquery(0).table_name().getText());
         term._strColumnName = sanitizeIdentifier(exprContext.getChild(0).getText());
         term._strOperator = exprContext.getChild(1).getText();
         term._objValue = parseValue(exprContext.getChild(2).getText());
-        terms.add(term);
+
+        return term;
     }
 
-    private String resolveTableName(SQLiteParser.Select_coreContext core) {
-        if (core.join_clause() != null && core.join_clause().table_or_subquery() != null
-                && !core.join_clause().table_or_subquery().isEmpty()
-                && core.join_clause().table_or_subquery(0).table_name() != null) {
-            return sanitizeIdentifier(core.join_clause().table_or_subquery(0).table_name().getText());
-        }
-        if (core.table_or_subquery() != null && !core.table_or_subquery().isEmpty()
-                && core.table_or_subquery(0).table_name() != null) {
-            return sanitizeIdentifier(core.table_or_subquery(0).table_name().getText());
-        }
-        return "";
-    }
 
-    private Object parseValue(String rawText) {
-        String text = sanitizeLiteral(rawText);
-        if (text.matches("^-?\\d+$")) {
-            try {
-                return Integer.parseInt(text);
-            } catch (NumberFormatException ignored) {
-                return Long.parseLong(text);
-            }
-        }
-        if (text.matches("^-?\\d+\\.\\d+$")) {
-            return Double.parseDouble(text);
-        }
-        if ("NULL".equalsIgnoreCase(text)) {
-            return null;
-        }
-        if ("TRUE".equalsIgnoreCase(text) || "FALSE".equalsIgnoreCase(text)) {
-            return Boolean.parseBoolean(text.toLowerCase());
-        }
-        return text;
-    }
+	private Object parseValue(String rawText) {
+		String text = sanitizeLiteral(rawText);
+		if (text.matches("^-?\\d+$")) {
+			try {
+				return Integer.parseInt(text);
+			} catch (NumberFormatException ignored) {
+				return Long.parseLong(text);
+			}
+		}
+		if (text.matches("^-?\\d+\\.\\d+$")) {
+			return Double.parseDouble(text);
+		}
+		if ("NULL".equalsIgnoreCase(text)) {
+			return null;
+		}
+		if ("TRUE".equalsIgnoreCase(text) || "FALSE".equalsIgnoreCase(text)) {
+			return Boolean.parseBoolean(text.toLowerCase());
+		}
+		return text;
+	}
 
-    private String sanitizeIdentifier(String text) {
-        return text.replace("`", "")
-                .replace("\"", "")
-                .replace("[", "")
-                .replace("]", "");
-    }
+	private String sanitizeIdentifier(String text) {
+		return text.replace("`", "").replace("\"", "").replace("[", "").replace("]", "");
+	}
 
-    private String sanitizeLiteral(String text) {
-        String trimmed = text.trim();
-        if ((trimmed.startsWith("'") && trimmed.endsWith("'"))
-                || (trimmed.startsWith("\"") && trimmed.endsWith("\""))) {
-            return trimmed.substring(1, trimmed.length() - 1);
-        }
-        return trimmed;
-    }
+	private String sanitizeLiteral(String text) {
+		String trimmed = text.trim();
+		if ((trimmed.startsWith("'") && trimmed.endsWith("'"))
+				|| (trimmed.startsWith("\"") && trimmed.endsWith("\""))) {
+			return trimmed.substring(1, trimmed.length() - 1);
+		}
+		return trimmed;
+	}
 
-    public Iterator<?> executeCommands() {
-        for (SQLCommand command : commands) {
-            Iterator<?> commandResult = command.execute(database);
-            if (commandResult != null) {
-                result = commandResult;
-            }
-        }
-        return result;
-    }
+	public Iterator<?> executeCommands() {
+		for (SQLCommand command : commands) {
+			Iterator<?> commandResult = command.execute(database);
+			if (commandResult != null) {
+				result = commandResult;
+			}
+		}
+		return result;
+	}
 }

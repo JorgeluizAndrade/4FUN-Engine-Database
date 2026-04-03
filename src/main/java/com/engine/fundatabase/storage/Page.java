@@ -28,7 +28,7 @@ public class Page implements java.io.Serializable {
         this.rows = new ArrayList<>();
         this.tableName = tableName;
         maxRows = 5;
-		this.serializer = new Serializer(null);
+		this.serializer = null;
     }
 
     public Page(String tableName, String pagesId) {
@@ -50,8 +50,13 @@ public class Page implements java.io.Serializable {
     
     private void initSerializer() {
         if (serializer == null) {
-            serializer = new Serializer(tableName);
+            serializer = new Serializer("data");
         }
+    }
+
+    public void persist() {
+        initSerializer();
+        serializer.serializePage(name, this);
     }
 
 
@@ -64,14 +69,14 @@ public class Page implements java.io.Serializable {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.add(position, row);
         newMinMax();
-        serializer.serializePage(name, this);
+        persist();
     }
 
     protected void deleteRowFromPage(Row row) {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.remove(position);
         newMinMax();
-        serializer.serializePage(name, this);
+        persist();
         handleEmptyPage();
     }
 
@@ -84,7 +89,7 @@ public class Page implements java.io.Serializable {
                 c.setValue(htblColNameValue.get(c.getKey()));
         }
 
-        serializer.serializePage(name, this);
+        persist();
     }
 
     private void newMinMax() {
