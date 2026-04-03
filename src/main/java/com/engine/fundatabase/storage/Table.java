@@ -3,8 +3,6 @@ package com.engine.fundatabase.storage;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 
-import org.antlr.v4.codegen.model.chunk.ThisRulePropertyRef_ctx;
-
 import java.util.ArrayList;
 
 import com.engine.fundatabase.utils.Constants;
@@ -69,7 +67,15 @@ public class Table implements java.io.Serializable {
 	
 
 	private void initSerializer() {
-		this.serializer = new Serializer(this.name);
+		this.serializer = new Serializer("data");
+	}
+
+	public void initializePhysicalStorage() {
+		if (!isEmpaty()) {
+			return;
+		}
+		Page page = initializePage();
+		page.persist();
 	}
 
 	public boolean isEmpaty() {
@@ -202,7 +208,7 @@ public class Table implements java.io.Serializable {
 
 		while (low <= high) {
 			int mid = (low + high) / 2;
-			Page currPage = new Page(null);
+			Page currPage = table.getPageAtPosition(mid);
 			int compareWithMin = compare(tuplePrimaryKey, currPage.getMinPK());
 			int compWithMax = compare(tuplePrimaryKey, currPage.getMaxPK());
 			if (compWithMax <= 0 && compareWithMin >= 0) {
@@ -217,7 +223,24 @@ public class Table implements java.io.Serializable {
 	}
 
     private static int compare(Object first, Object second) {
-        return ((Comparable) first).compareTo(second);
+		if (first == second) {
+			return 0;
+		}
+		if (first == null || first instanceof DBAppNull) {
+			return -1;
+		}
+		if (second == null || second instanceof DBAppNull) {
+			return 1;
+		}
+		if (first instanceof Number && second instanceof Number) {
+			Double firstDouble = ((Number) first).doubleValue();
+			Double secondDouble = ((Number) second).doubleValue();
+			return firstDouble.compareTo(secondDouble);
+		}
+		if (first instanceof Comparable) {
+			return ((Comparable) first).compareTo(second);
+		}
+		throw new IllegalArgumentException("Valores não comparáveis: " + first + " e " + second);
     }
 
 }

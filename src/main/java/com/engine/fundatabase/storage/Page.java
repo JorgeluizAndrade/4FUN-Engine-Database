@@ -28,7 +28,7 @@ public class Page implements java.io.Serializable {
         this.rows = new ArrayList<>();
         this.tableName = tableName;
         maxRows = 5;
-		this.serializer = new Serializer(null);
+		this.serializer = null;
     }
 
     public Page(String tableName, String pagesId) {
@@ -50,8 +50,13 @@ public class Page implements java.io.Serializable {
     
     private void initSerializer() {
         if (serializer == null) {
-            serializer = new Serializer(tableName);
+            serializer = new Serializer("data");
         }
+    }
+
+    public void persist() {
+        initSerializer();
+        serializer.serializePage(name, this);
     }
 
 
@@ -64,14 +69,14 @@ public class Page implements java.io.Serializable {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.add(position, row);
         newMinMax();
-        serializer.serializePage(name, this);
+        persist();
     }
 
     protected void deleteRowFromPage(Row row) {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.remove(position);
         newMinMax();
-        serializer.serializePage(name, this);
+        persist();
         handleEmptyPage();
     }
 
@@ -84,7 +89,7 @@ public class Page implements java.io.Serializable {
                 c.setValue(htblColNameValue.get(c.getKey()));
         }
 
-        serializer.serializePage(name, this);
+        persist();
     }
 
     private void newMinMax() {
@@ -136,6 +141,9 @@ public class Page implements java.io.Serializable {
     }
 
     private static boolean operatorBasedSelection(Object firstOperand, Object secondOperand, String operator) {
+        if (firstOperand == null || firstOperand instanceof DBAppNull) {
+            return Constants.NOT_EQUAL.equals(operator) && secondOperand != null && !(secondOperand instanceof DBAppNull);
+        }
         if (operator.equals(Constants.EQUAL))
             return compare(firstOperand, secondOperand) == 0;
         if (operator.equals(Constants.GREATER_THAN))
@@ -170,7 +178,24 @@ public class Page implements java.io.Serializable {
     }
 
     private static int compare(Object first, Object second) {
-        return ((Comparable) first).compareTo(second);
+        if (first == second) {
+            return 0;
+        }
+        if (first == null || first instanceof DBAppNull) {
+            return -1;
+        }
+        if (second == null || second instanceof DBAppNull) {
+            return 1;
+        }
+        if (first instanceof Number && second instanceof Number) {
+            Double firstDouble = ((Number) first).doubleValue();
+            Double secondDouble = ((Number) second).doubleValue();
+            return firstDouble.compareTo(secondDouble);
+        }
+        if (first instanceof Comparable) {
+            return ((Comparable) first).compareTo(second);
+        }
+        throw new IllegalArgumentException("Valores não comparáveis: " + first + " e " + second);
     }
 
     private boolean isEmpty() {
