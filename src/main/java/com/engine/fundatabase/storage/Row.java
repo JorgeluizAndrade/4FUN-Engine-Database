@@ -1,7 +1,6 @@
 package com.engine.fundatabase.storage;
 
 import java.util.ArrayList;
-import java.util.Vector;
 
 import lombok.Getter;
 
@@ -51,17 +50,13 @@ public class Row implements IRow, java.io.Serializable {
 	
 		
 	protected Row getCopyRow() {
-		Row rCopy = null;
-		
-		try {
-			rCopy = (Row) this.clone();
-			return rCopy;
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+		Row copy = new Row();
+		copy.setPrimaryKey(primaryKey);
+		for (Columns column : columns) {
+			// Columns é mutável, então a cópia precisa recriar cada entrada.
+			copy.addColumn(new Columns(column.getKey(), column.getValue()));
 		}
-		
-		return rCopy;
+		return copy;
 	}
 	
 	@Override

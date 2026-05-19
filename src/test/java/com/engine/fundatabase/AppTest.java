@@ -89,20 +89,70 @@ class AppTest {
         assertEquals(20, page.getRows().get(2).getPrimaryKey());
     }
 
+    @Test
+    void shouldSplitPageWhenCapacityIsExceeded() {
+        Table table = createTable("overflowTable", new Hashtable<>(), new Hashtable<>());
+
+        for (int id = 1; id <= 6; id++) {
+            table.insertRow(createRowData(id));
+        }
+
+        assertEquals(2, table.getPagesId().size());
+        assertEquals(5, table.getPageAtPosition(0).getRows().size());
+        assertEquals(1, table.getPageAtPosition(1).getRows().size());
+        assertEquals(6, table.getPageAtPosition(1).getRows().get(0).getPrimaryKey());
+    }
+
+    @Test
+    void shouldValidateMinAndMaxConstraintsBeforeInsert() {
+        Hashtable<String, String> minValues = new Hashtable<>();
+        minValues.put("id", "10");
+
+        Hashtable<String, String> maxValues = new Hashtable<>();
+        maxValues.put("id", "20");
+
+        Table table = createTable("constraintsTable", minValues, maxValues);
+
+        IllegalArgumentException belowMin = assertThrows(IllegalArgumentException.class,
+                () -> table.insertRow(createRowData(9)));
+        assertTrue(belowMin.getMessage().contains("mínimo"));
+
+        IllegalArgumentException aboveMax = assertThrows(IllegalArgumentException.class,
+                () -> table.insertRow(createRowData(21)));
+        assertTrue(aboveMax.getMessage().contains("máximo"));
+    }
+
+    @Test
+    void shouldExposeIsEmptyWithoutBreakingLegacyTypoMethod() {
+        Table table = createTable();
+
+        assertTrue(table.isEmpty());
+        assertTrue(table.isEmpaty());
+
+        table.insertRow(createRowData(1));
+
+        assertFalse(table.isEmpty());
+        assertFalse(table.isEmpaty());
+    }
+
     private Table createTable() {
+        return createTable("testTable", new Hashtable<>(), new Hashtable<>());
+    }
+
+    private Table createTable(String tableName, Hashtable<String, String> minValues, Hashtable<String, String> maxValues) {
         Hashtable<String, String> colTypes = new Hashtable<>();
         colTypes.put("id", "java.lang.Integer");
 
         return new Table(
-            "testTable",
+            tableName,
             "id",
             new Row(),
             0,
             0,
             new ArrayList<>(),
             colTypes,
-            new Hashtable<>(),
-            new Hashtable<>(),
+            minValues,
+            maxValues,
             "java.lang.Integer",
             null
         );

@@ -67,6 +67,11 @@ public class BTreeIndex<V> implements java.io.Serializable {
         return result;
     }
 
+    public void remove(Object key, V value) {
+        Comparable<Object> comparableKey = asComparable(key);
+        remove(root, comparableKey, value);
+    }
+
     private void collectAll(Node<V> node, List<V> out) {
         for (int i = 0; i < node.keys.size(); i++) {
             if (!node.leaf) {
@@ -118,6 +123,21 @@ public class BTreeIndex<V> implements java.io.Serializable {
         }
 
         return search(node.children.get(idx), key);
+    }
+
+    private void remove(Node<V> node, Comparable<Object> key, V value) {
+        int idx = findIndex(node, key);
+
+        if (idx < node.keys.size() && node.keys.get(idx).compareTo(key) == 0) {
+            node.values.get(idx).remove(value);
+            return;
+        }
+
+        if (node.leaf) {
+            return;
+        }
+
+        remove(node.children.get(idx), key, value);
     }
 
     private void insertNonFull(Node<V> node, Comparable<Object> key, V value) {

@@ -4,7 +4,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.ArrayList;
 
-import com.engine.fundatabase.utils.Action;
 import com.engine.fundatabase.utils.Constants;
 import com.engine.fundatabase.utils.serializer.Serializer;
 
@@ -69,7 +68,19 @@ public class Page implements java.io.Serializable {
         int position = isEmpty() ? 0 : pageBinarySearch(row.getPrimaryKey());
         rows.add(position, row);
         newMinMax();
+        populateToIndexes(row, indexes);
         persist();
+    }
+
+    public Row splitOverflow(Hashtable<String, BTreeIndex<Row>> indexes) {
+        if (rows.size() <= maxRows) {
+            return null;
+        }
+        // Remove a última linha para que a tabela a reposicione na próxima página.
+        Row overflowRow = removeLastRow(rows);
+        removeFromIndexes(overflowRow, indexes);
+        persist();
+        return overflowRow;
     }
 
     protected void deleteRowFromPage(Row row) {
@@ -215,9 +226,29 @@ public class Page implements java.io.Serializable {
     
     
     
-    private void populateToIndex(Row row, Action action, ArrayList<BTreeIndex<?>> indices)  {
-    	
-	}
+    private void populateToIndexes(Row row, Hashtable<String, BTreeIndex<Row>> indexes) {
+        if (row == null || indexes == null || indexes.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, BTreeIndex<Row>> entry : indexes.entrySet()) {
+            Object columnValue = row.getValueColumn(entry.getKey());
+            if (columnValue != null && !(columnValue instanceof DBAppNull)) {
+                entry.getValue().insert(columnValue, row);
+            }
+        }
+    }
+
+    private void removeFromIndexes(Row row, Hashtable<String, BTreeIndex<Row>> indexes) {
+        if (row == null || indexes == null || indexes.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, BTreeIndex<Row>> entry : indexes.entrySet()) {
+            Object columnValue = row.getValueColumn(entry.getKey());
+            if (columnValue != null && !(columnValue instanceof DBAppNull)) {
+                entry.getValue().remove(columnValue, row);
+            }
+        }
+    }
 
     
     

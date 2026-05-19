@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Map.Entry;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import com.engine.fundatabase.utils.Constants;
 import com.engine.fundatabase.utils.serializer.Serializer;
@@ -27,7 +28,7 @@ public class Table implements java.io.Serializable {
 	private String primaryKeyType;
 	private Hashtable<String, BTreeIndex<Row>> indexes = new Hashtable<String, BTreeIndex<Row>>();;
 
-	private Serializer serializer;
+	private transient Serializer serializer;
 
 	public Table(String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType,
 			Hashtable<String, String> htblColNameMin, Hashtable<String, String> htblColNameMax) {
@@ -71,15 +72,20 @@ public class Table implements java.io.Serializable {
 	}
 
 	public void initializePhysicalStorage() {
-		if (!isEmpaty()) {
+		if (!isEmpty()) {
 			return;
 		}
 		Page page = initializePage();
 		page.persist();
 	}
 
-	public boolean isEmpaty() {
+	public boolean isEmpty() {
 		return pagesId == null || pagesId.isEmpty();
+	}
+
+	@Deprecated
+	public boolean isEmpaty() {
+		return isEmpty();
 	}
 
 	public void createIndex(String columnName, int minimumDegree) {
@@ -120,13 +126,11 @@ public class Table implements java.io.Serializable {
 	public void insertRow(Hashtable<String, Object> colunmNameValue) {
 		Row row = createRow(colunmNameValue);
 
-		if (isEmpaty()) {
+		if (isEmpty()) {
 			insertNewPage(row);
 		} else {
 			int position = binarySearchPages(this, row.getPrimaryKey());
-			Page page = getPageAtPosition(position);
-
-			page.insertIntoPage(row, indexes);
+			insertRowAtPage(position, row);
 		}
 
 		System.out.println("PASSEI AQUI TABLE DSA INSERT ROW");
@@ -138,6 +142,7 @@ public class Table implements java.io.Serializable {
 	private void insertNewPage(Row row) {
 		Page page = initializePage();
 		page.insertIntoPage(row, indexes);
+		handleOverflow(page, cntPage - 1);
 	}
 
 	private Page initializePage() {
@@ -159,8 +164,86 @@ public class Table implements java.io.Serializable {
 			if (c.getKey().equals(getPKColumn())) {
 				row.setPrimaryKey(c.getValue());
 			}
+			validateColumnConstraints(String.valueOf(c.getKey()), c.getValue());
 		}
 		return row;
+	}
+
+	private void insertRowAtPage(int position, Row row) {
+		Page page = getPageAtPosition(position);
+		page.insertIntoPage(row, indexes);
+		handleOverflow(page, position);
+	}
+
+	private void handleOverflow(Page page, int pagePosition) {
+		Row overflowRow = page.splitOverflow(indexes);
+		if (overflowRow == null) {
+			return;
+		}
+
+		if (pagePosition + 1 >= pagesId.size()) {
+			Page nextPage = initializePage();
+			nextPage.insertIntoPage(overflowRow, indexes);
+			handleOverflow(nextPage, pagesId.size() - 1);
+			return;
+		}
+
+		insertRowAtPage(pagePosition + 1, overflowRow);
+	}
+
+	private void validateColumnConstraints(String columnName, Object value) {
+		if (value == null || value instanceof DBAppNull) {
+			return;
+		}
+		validateLowerBound(columnName, value);
+		validateUpperBound(columnName, value);
+	}
+
+	private void validateLowerBound(String columnName, Object value) {
+		String minValue = colNameMin == null ? null : colNameMin.get(columnName);
+		if (minValue == null || minValue.isBlank()) {
+			return;
+		}
+		Object parsedMin = parseConstraintValue(columnName, minValue);
+		if (compare(value, parsedMin) < 0) {
+			throw new IllegalArgumentException("Valor abaixo do mínimo permitido para " + columnName + ": " + value);
+		}
+	}
+
+	private void validateUpperBound(String columnName, Object value) {
+		String maxValue = colNameMax == null ? null : colNameMax.get(columnName);
+		if (maxValue == null || maxValue.isBlank()) {
+			return;
+		}
+		Object parsedMax = parseConstraintValue(columnName, maxValue);
+		if (compare(value, parsedMax) > 0) {
+			throw new IllegalArgumentException("Valor acima do máximo permitido para " + columnName + ": " + value);
+		}
+	}
+
+	private Object parseConstraintValue(String columnName, String rawValue) {
+		String normalizedType = colNameType.get(columnName);
+		String text = rawValue.trim();
+		if ((text.startsWith("'") && text.endsWith("'")) || (text.startsWith("\"") && text.endsWith("\""))) {
+			text = text.substring(1, text.length() - 1);
+		}
+		if (normalizedType == null) {
+			return text;
+		}
+		String typeName = normalizedType.toLowerCase(Locale.ROOT);
+		if (typeName.contains("int")) {
+			return Integer.parseInt(text);
+		}
+		if (typeName.contains("double") || typeName.contains("float") || typeName.contains("decimal")) {
+			return Double.parseDouble(text);
+		}
+		if (typeName.contains("long")) {
+			return Long.parseLong(text);
+		}
+		if (typeName.contains("boolean")) {
+			return Boolean.parseBoolean(text);
+		}
+		return text;
 	}
 
 	private boolean canUseIndex(Hashtable<String, Object> colNameValue) {
