@@ -18,11 +18,13 @@ import com.engine.fundatabase.utils.serializer.Serializer;
 public class Database implements IDatabase {
 
 	private HashSet<String> myTables;
+	private Map<String, Table> tableCache;
 	private Serializer serializer;
 
 	public Database() {
 		this.serializer = new Serializer("data");
 		this.myTables = new HashSet<String>();
+		this.tableCache = new LinkedHashMap<>();
 	}
 
 	@Override
@@ -31,10 +33,12 @@ public class Database implements IDatabase {
 			Hashtable<String, String> htblColNameMax) {
 		// TODO Auto-generated method stub
 		Table table = new Table(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
+		table.initializePhysicalStorage();
 		
 		System.out.println("PASSEI AQUI: CREATE TABLE -> " + strTableName);
 
 		myTables.add(strTableName);
+		tableCache.put(strTableName, table);
 
 		serializer.serializeTable(table);
 
@@ -50,13 +54,14 @@ public class Database implements IDatabase {
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) {
 		// TODO Auto-generated method stub
 
-		Table table = serializer.deserializeTable(strTableName);
+		Table table = getTable(strTableName);
 
 		System.out.println("table name: " + strTableName + "\n col name" + htblColNameValue);
 
 		insertRow(table, htblColNameValue);
 		
 		serializer.serializeTable(table);
+		tableCache.put(strTableName, table);
 	}
 
 	private void insertRow(Table table, Hashtable<String, Object> htblColNameValue) {
@@ -77,12 +82,12 @@ public class Database implements IDatabase {
 
 	}
 
-	private static ArrayList<Row> selectSimple(SQL[] arrSQLTerms, String[] strarrOperators) {
+	private ArrayList<Row> selectSimple(SQL[] arrSQLTerms, String[] strarrOperators) {
 		if (arrSQLTerms == null || arrSQLTerms.length == 0) {
 			return new ArrayList<>();
 		}
 
-		Table table = new Serializer("data").deserializeTable(arrSQLTerms[0]._strTableName);
+		Table table = getTable(arrSQLTerms[0]._strTableName);
 		ArrayList<ArrayList<Row>> result = new ArrayList<>();
 		for (int i = 0; i < arrSQLTerms.length; i++) {
 
@@ -171,10 +176,20 @@ public class Database implements IDatabase {
 		return mappedRows;
 	}
 
-	private static ArrayList<Row> selectFromTableHelper(Table table, Hashtable<String, Object> colNameValue,
+	private ArrayList<Row> selectFromTableHelper(Table table, Hashtable<String, Object> colNameValue,
 			String _strOperator) {
 		return table.select(colNameValue, _strOperator);
 
+	}
+
+	private Table getTable(String tableName) {
+		Table cachedTable = tableCache.get(tableName);
+		if (cachedTable != null) {
+			return cachedTable;
+		}
+		Table table = serializer.deserializeTable(tableName);
+		tableCache.put(tableName, table);
+		return table;
 	}
 
 }
