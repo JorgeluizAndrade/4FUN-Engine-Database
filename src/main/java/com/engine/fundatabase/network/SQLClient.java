@@ -11,8 +11,11 @@ public class SQLClient {
 
     public static void main(String[] args) throws IOException {
         try (Scanner scanner = new Scanner(System.in)) {
+
+            while(true){
             System.out.print("SQL> ");
             String query = scanner.nextLine();
+            
 
             try (Socket socket = new Socket("127.0.0.1", 8080);
                  PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -23,5 +26,7 @@ public class SQLClient {
                 System.out.println("Server response: " + response);
             }
         }
+      }
+        
     }
 }
