@@ -4,7 +4,7 @@ Almost all of the implementation ideas come from these resources:
 - [Tony Saro](https://youtu.be/5Pc18ge9ohI?si=1r998J88q2AmbJ0L)
 - [YehiaFarghaly - Code ref](https://github.com/YehiaFarghaly/database-engine)
 
-## FunEngine
+## 4FUN-Database
 
 FunEngine is a small educational database engine written in Java. The project parses a subset of SQL, converts it into commands, executes those commands against an internal storage layer, and persists tables/pages on disk using Java serialization.
 
